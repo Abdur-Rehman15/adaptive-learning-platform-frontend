@@ -16,7 +16,7 @@ const adminLinks = [
   { to: '/admin/questions', label: 'Questions' },
 ];
 
-export const Navbar = ({ role = 'user' }: NavbarProps) => {
+export const Navbar = ({ role }: NavbarProps) => {
   const location = useLocation();
   const links = role === 'admin' ? adminLinks : userLinks;
 
