@@ -1,15 +1,16 @@
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
+  role?: string;
 }
 
 export interface LoginPayload {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface LoginResponse {
-  user: User;
-  token: string;
+  access_token: string;
+  token_type: string;
 }

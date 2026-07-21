@@ -1,13 +1,18 @@
 import { apiFetch } from '@/api/client';
-import type { ApiResponse } from '@/types/api.types';
 import type { LoginPayload, LoginResponse } from '../types/auth.types';
 
 export const loginRequest = async (
   payload: LoginPayload
 ): Promise<LoginResponse> => {
-  const res = await apiFetch<ApiResponse<LoginResponse>>('/auth/login', {
+  const formBody = new URLSearchParams();
+  formBody.append('username', payload.username);
+  formBody.append('password', payload.password);
+
+  return apiFetch<LoginResponse>('/login', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formBody,
   });
-  return res.data;
 };

@@ -5,7 +5,7 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: loginRequest,
     onSuccess: (data) => {
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.access_token);
     },
     onError: (error) => {
       console.error('Login failed:', error.message);
