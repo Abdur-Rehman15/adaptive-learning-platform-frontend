@@ -1,4 +1,4 @@
-import type { LearnerEnrollment } from '../types/dashboard.types';
+import type { LearnerEnrollment } from '../types/learnerDashboard.types';
 
 interface CourseSelectorProps {
   enrollments: LearnerEnrollment[];

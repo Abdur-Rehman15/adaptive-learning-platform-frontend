@@ -1,4 +1,4 @@
-import type { LearnerScoreTrend } from '../types/dashboard.types';
+import type { LearnerScoreTrend } from '../types/learnerDashboard.types';
 
 interface ScoreTrendListProps {
   trends: LearnerScoreTrend[];

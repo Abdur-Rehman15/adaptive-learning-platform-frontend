@@ -5,20 +5,20 @@ import {
   fetchLearnerCourseSummary,
   fetchLearnerEnrollments,
   fetchLearnerScoreTrends,
-} from '../api/dashboard.api';
+} from '../api/learnerDashboard.api';
 import type {
   LearnerCourseSummary,
   LearnerEnrollment,
   LearnerScoreTrend,
-} from '../types/dashboard.types';
-import { buildDashboardStats } from '../utils/dashboardMappers';
+} from '../types/learnerDashboard.types';
+import { buildDashboardStats } from '../utils/learnerDashboardMappers';
 
 export const useLearnerDashboard = () => {
   const { token, user } = useAuth();
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
   const enrollmentsQuery = useQuery<LearnerEnrollment[]>({
-    queryKey: ['dashboard', 'enrollments', token],
+    queryKey: ['learner-dashboard', 'enrollments', token],
     queryFn: () => fetchLearnerEnrollments(token as string),
     enabled: Boolean(token),
   });
@@ -46,14 +46,14 @@ export const useLearnerDashboard = () => {
   );
 
   const summaryQuery = useQuery<LearnerCourseSummary>({
-    queryKey: ['dashboard', 'summary', token, selectedCourseId],
+    queryKey: ['learner-dashboard', 'summary', token, selectedCourseId],
     queryFn: () =>
       fetchLearnerCourseSummary(token as string, selectedCourseId as string, selectedEnrollment ?? undefined),
     enabled: Boolean(token && selectedCourseId),
   });
 
   const scoreTrendsQuery = useQuery<LearnerScoreTrend[]>({
-    queryKey: ['dashboard', 'score-trends', token, selectedCourseId],
+    queryKey: ['learner-dashboard', 'score-trends', token, selectedCourseId],
     queryFn: () => fetchLearnerScoreTrends(token as string, selectedCourseId as string),
     enabled: Boolean(token && selectedCourseId),
   });

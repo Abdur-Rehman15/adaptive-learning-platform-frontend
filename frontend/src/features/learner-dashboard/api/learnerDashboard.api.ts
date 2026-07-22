@@ -3,12 +3,12 @@ import type {
   LearnerCourseSummary,
   LearnerEnrollment,
   LearnerScoreTrend,
-} from '../types/dashboard.types';
+} from '../types/learnerDashboard.types';
 import {
   normalizeCourseSummary,
   normalizeEnrollments,
   normalizeScoreTrends,
-} from '../utils/dashboardMappers';
+} from '../utils/learnerDashboardMappers';
 
 const withAuthHeaders = (token: string) => ({
   Authorization: `Bearer ${token}`,

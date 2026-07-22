@@ -3,7 +3,7 @@ import type {
   LearnerDashboardStats,
   LearnerEnrollment,
   LearnerScoreTrend,
-} from '../types/dashboard.types';
+} from '../types/learnerDashboard.types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
