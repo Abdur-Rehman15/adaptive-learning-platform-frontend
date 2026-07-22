@@ -1,8 +1,12 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/features/auth/context/AuthContext';
 
-export const ProtectedRoute = () => {
-  const { isAuthenticated, isHydrating } = useAuth();
+interface ProtectedRouteProps {
+  allowedRoles?: ('user' | 'admin')[];
+}
+
+export const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps = {}) => {
+  const { isAuthenticated, isHydrating, role } = useAuth();
 
   if (isHydrating) {
     return (
@@ -41,5 +45,13 @@ export const ProtectedRoute = () => {
     );
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && role && !allowedRoles.includes(role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Outlet />;
 };
