@@ -8,6 +8,7 @@ import { RegisterPage } from '@/pages/Register';
 import { Dashboard } from '@/pages/Dashboard';
 import { CreateCoursePage } from '@/pages/CreateCourse';
 import { CoursesPage } from '@/pages/Courses';
+import { CourseQuestionsPage } from '@/pages/CourseQuestions';
 import { ProtectedRoute } from './ProtectedRoute';
 
 const router = createBrowserRouter([
@@ -42,6 +43,14 @@ const router = createBrowserRouter([
       {
         path: '/courses/create',
         element: <CreateCoursePage />,
+      },
+      {
+        path: '/course-questions',
+        element: <CourseQuestionsPage />,
+      },
+      {
+        path: '/admin/questions',
+        element: <CourseQuestionsPage />,
       },
     ],
   },

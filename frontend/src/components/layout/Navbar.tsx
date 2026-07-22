@@ -13,7 +13,7 @@ const userLinks = [
 const adminLinks = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/courses', label: 'Courses' },
-  { to: '/admin/questions', label: 'Questions' },
+  { to: '/course-questions', label: 'Questions' },
 ];
 
 export const Navbar = ({ role }: NavbarProps) => {
