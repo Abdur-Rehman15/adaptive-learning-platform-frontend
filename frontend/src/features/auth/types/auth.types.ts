@@ -21,3 +21,12 @@ export interface CurrentUserResponse {
   email: string;
   role: 'user' | 'admin';
 }
+
+export interface RegisterPayload {
+  username: string;
+  email: string;
+  role: 'user' | 'admin';
+  password: string;
+}
+
+export type RegisterResponse = CurrentUserResponse;

@@ -262,6 +262,63 @@ h2 {
   background: var(--color-surface-sunken);
 }
 
+.dashboard-btn {
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 0 var(--color-border);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  font-family: 'Spline Sans', sans-serif;
+  text-transform: uppercase;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 var(--color-border);
+}
+
+.dashboard-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.dashboard-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: 2px 2px 0 0 var(--color-border);
+  transform: translate(2px, 2px);
+}
+
+.dashboard-btn--primary {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.dashboard-btn--primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.dashboard-btn--accent {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.dashboard-btn--accent:hover {
+  background: #be123c;
+}
+
+.dashboard-btn--sunken {
+  background: var(--color-surface-sunken);
+  color: var(--color-ink);
+}
+
 @media (max-width: 640px) {
   .auth-card {
     padding: 24px;

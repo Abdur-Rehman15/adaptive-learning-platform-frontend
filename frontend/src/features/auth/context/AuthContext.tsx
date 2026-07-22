@@ -12,6 +12,8 @@ import type { CurrentUserResponse } from '../types/auth.types';
 interface AuthContextValue {
   token: string | null;
   user: CurrentUserResponse | null;
+  role: 'user' | 'admin' | null;
+  isAuthenticated: boolean;
   isHydrating: boolean;
   setSession: (token: string, user: CurrentUserResponse) => void;
   clearSession: () => void;
@@ -24,22 +26,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.getItem('token')
   );
   const [user, setUser] = useState<CurrentUserResponse | null>(null);
-  const [isHydrating, setIsHydrating] = useState(true);
+  const [isHydrating, setIsHydrating] = useState(() => !!localStorage.getItem('token'));
+
+  const role = useMemo<'user' | 'admin' | null>(() => user?.role ?? null, [user]);
+  const isAuthenticated = useMemo<boolean>(() => !!user && !!token, [user, token]);
 
   useEffect(() => {
     let isActive = true;
 
     const hydrateUser = async () => {
-      if (!token) {
-        setUser(null);
-        setIsHydrating(false);
+      const storedToken = localStorage.getItem('token');
+      if (!storedToken) {
+        if (isActive) {
+          setIsHydrating(false);
+        }
         return;
       }
 
-      setIsHydrating(true);
-
       try {
-        const currentUser = await getCurrentUserRequest(token);
+        const currentUser = await getCurrentUserRequest(storedToken);
 
         if (isActive) {
           setUser(currentUser);
@@ -62,12 +67,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       isActive = false;
     };
-  }, [token]);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       token,
       user,
+      role,
+      isAuthenticated,
       isHydrating,
       setSession: (nextToken, nextUser) => {
         localStorage.setItem('token', nextToken);
@@ -80,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
       },
     }),
-    [isHydrating, token, user]
+    [isHydrating, token, user, role, isAuthenticated]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
