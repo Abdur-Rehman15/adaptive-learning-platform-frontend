@@ -86,12 +86,20 @@ export const LearnerDashboardView = () => {
               Your course path, quiz scores, and certificate dashboard are fully loaded.
             </p>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="dashboard-btn dashboard-btn--primary"
-          >
-            Sign out
-          </button>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => navigate('/courses')}
+              className="dashboard-btn dashboard-btn--primary"
+            >
+              Browse Courses
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="dashboard-btn dashboard-btn--sunken"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
 
