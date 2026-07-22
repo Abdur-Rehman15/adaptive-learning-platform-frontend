@@ -7,6 +7,7 @@ import { LoginPage } from '@/pages/Login';
 import { RegisterPage } from '@/pages/Register';
 import { Dashboard } from '@/pages/Dashboard';
 import { CreateCoursePage } from '@/pages/CreateCourse';
+import { CoursesPage } from '@/pages/Courses';
 import { ProtectedRoute } from './ProtectedRoute';
 
 const router = createBrowserRouter([
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         path: '/dashboard',
         element: <Dashboard />,
+      },
+      {
+        path: '/courses',
+        element: <CoursesPage />,
       },
     ],
   },
