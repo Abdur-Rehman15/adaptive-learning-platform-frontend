@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import type { StudentCourse } from '../types/studentCourses.types';
 import { CourseModules } from './CourseModules';
+import { CertificateDownload } from '@/features/quiz-attempt/components/CertificateDownload';
 
 interface CourseCardProps {
   course: StudentCourse;
@@ -93,7 +94,7 @@ export const CourseCard = ({
           </p>
         </div>
 
-        <CourseModules courseId={course.id} />
+        <CourseModules courseId={course.id} isEnrolled={course.isEnrolled} />
       </div>
 
       <div style={{ marginTop: '24px' }}>
@@ -108,6 +109,7 @@ export const CourseCard = ({
           </button>
         ) : course.isEnrolled ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Progress header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700 }}>
               <span style={{ textTransform: 'uppercase', color: 'var(--color-ink-soft)' }}>
                 Progress
@@ -122,14 +124,23 @@ export const CourseCard = ({
                 style={{ width: `${course.progressPercent}%` }}
               />
             </div>
-            <button
-              type="button"
-              className="dashboard-btn dashboard-btn--sunken"
-              style={{ width: '100%', marginTop: '8px' }}
-              onClick={() => navigate('/dashboard')}
-            >
-              Go to Workspace
-            </button>
+
+            {/* Certificate section — only when 100% complete */}
+            {course.progressPercent === 100 ? (
+              <CertificateDownload
+                courseId={course.id}
+                courseTitle={course.title}
+              />
+            ) : (
+              <button
+                type="button"
+                className="dashboard-btn dashboard-btn--sunken"
+                style={{ width: '100%', marginTop: '8px' }}
+                onClick={() => navigate('/courses')}
+              >
+                Continue Learning
+              </button>
+            )}
           </div>
         ) : (
           <button

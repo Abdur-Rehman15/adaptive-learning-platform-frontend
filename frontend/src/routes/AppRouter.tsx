@@ -9,6 +9,7 @@ import { Dashboard } from '@/pages/Dashboard';
 import { CreateCoursePage } from '@/pages/CreateCourse';
 import { CoursesPage } from '@/pages/Courses';
 import { CourseQuestionsPage } from '@/pages/CourseQuestions';
+import { QuizAttemptPage } from '@/pages/QuizAttempt';
 import { ProtectedRoute } from './ProtectedRoute';
 
 const router = createBrowserRouter([
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
       {
         path: '/courses',
         element: <CoursesPage />,
+      },
+      {
+        path: '/quiz/:moduleId',
+        element: <QuizAttemptPage />,
       },
     ],
   },
