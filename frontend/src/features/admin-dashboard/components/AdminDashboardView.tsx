@@ -83,12 +83,20 @@ export const AdminDashboardView = () => {
               Monitor course metrics, curriculum delivery progress, and student grades.
             </p>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="dashboard-btn dashboard-btn--accent"
-          >
-            Sign out
-          </button>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => navigate('/courses/create')}
+              className="dashboard-btn dashboard-btn--primary"
+            >
+              + Create New Course
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="dashboard-btn dashboard-btn--sunken"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
 
@@ -243,6 +251,13 @@ export const AdminDashboardView = () => {
           <p className="dashboard-empty__text">
             Author a course, create modules, and set quizzes. Once learners register and enroll, their metrics, scores, and activity streams will compile here.
           </p>
+          <button
+            onClick={() => navigate('/courses/create')}
+            className="dashboard-btn dashboard-btn--accent"
+            style={{ marginTop: '8px' }}
+          >
+            + Create Your First Course
+          </button>
         </section>
       )}
     </div>

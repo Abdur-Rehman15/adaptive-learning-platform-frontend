@@ -650,3 +650,91 @@ h2 {
     padding: 16px;
   }
 }
+
+/* ─── Dashboard Components ───────────────────────────────────── */
+
+.dashboard-stat-card {
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  background: var(--color-surface);
+  box-shadow: 3px 3px 0 var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dashboard-stat-card__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-soft);
+  margin: 0;
+}
+
+.dashboard-stat-card__value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0;
+  color: var(--color-ink);
+  line-height: 1;
+}
+
+.dashboard-stat-card__meta {
+  font-size: 0.75rem;
+  color: var(--color-ink-faint);
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.dashboard-empty {
+  border: 2px dashed var(--color-border);
+  border-radius: 16px;
+  padding: 64px 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-empty__eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-accent);
+  margin: 0;
+}
+
+.dashboard-empty__title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.dashboard-empty__text {
+  color: var(--color-ink-soft);
+  font-size: 0.875rem;
+  max-width: 420px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Two-column layout that stacks on narrow screens */
+.responsive-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 2.2fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .responsive-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

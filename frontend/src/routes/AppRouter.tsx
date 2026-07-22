@@ -6,6 +6,7 @@ import {
 import { LoginPage } from '@/pages/Login';
 import { RegisterPage } from '@/pages/Register';
 import { Dashboard } from '@/pages/Dashboard';
+import { CreateCoursePage } from '@/pages/CreateCourse';
 import { ProtectedRoute } from './ProtectedRoute';
 
 const router = createBrowserRouter([
@@ -27,6 +28,15 @@ const router = createBrowserRouter([
       {
         path: '/dashboard',
         element: <Dashboard />,
+      },
+    ],
+  },
+  {
+    element: <ProtectedRoute allowedRoles={['admin']} />,
+    children: [
+      {
+        path: '/courses/create',
+        element: <CreateCoursePage />,
       },
     ],
   },
