@@ -31,10 +31,24 @@ export async function apiFetch<T>(
   }
 
   if (!res.ok) {
-    const message =
-      (payload as { detail?: string; message?: string } | null)?.detail ||
-      (payload as { detail?: string; message?: string } | null)?.message ||
-      `API error: ${res.status}`;
+    let message = `API error: ${res.status}`;
+    if (payload && typeof payload === 'object') {
+      const p = payload as Record<string, unknown>;
+      if (typeof p.detail === 'string') {
+        message = p.detail;
+      } else if (Array.isArray(p.detail)) {
+        // FastAPI model validation errors
+        message = p.detail
+          .map((d: any) => `${d.loc ? d.loc.join('.') : 'field'}: ${d.msg || 'invalid value'}`)
+          .join(', ');
+      } else if (p.detail && typeof p.detail === 'object') {
+        message = JSON.stringify(p.detail);
+      } else if (typeof p.message === 'string') {
+        message = p.message;
+      }
+    } else if (typeof payload === 'string' && payload.trim().length > 0) {
+      message = payload;
+    }
     throw new Error(message);
   }
 
