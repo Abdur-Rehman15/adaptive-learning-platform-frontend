@@ -16,7 +16,7 @@ export interface QuizAttempt {
 /** Returned by POST /modules/{module_id}/quiz-attempts/start and /retry */
 export interface QuizStartResponse {
   attempt: QuizAttempt;
-  next_question: Question;
+  next_question: Question | null;
 }
 
 /** Returned by POST /quiz-attempts/{question_id}/answers/{attempt_id} */
@@ -29,6 +29,7 @@ export interface AnswerSubmitResponse {
 export interface QuizAttemptSummary {
   id: number;
   module_id: number;
+  user_id: number;
   started_at: string;
   completed_at: string | null;
   final_score: number | null;
@@ -40,6 +41,15 @@ export interface QuizAttemptSummary {
 export interface QuizSubmitResponse {
   final_score: number;
   attempt_id: number;
+}
+
+/** Returned by GET /quiz-attempts/{attempt_id}/answers */
+export interface QuizAnswerRecord {
+  id: number;
+  question_id: number;
+  attempt_id: number;
+  is_correct: boolean;
+  difficulty_at_time: string;
 }
 
 // ─── Client-side state machine ───────────────────────────────────────────────

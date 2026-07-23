@@ -4,6 +4,7 @@ import type {
   QuizStartResponse,
   AnswerSubmitResponse,
   QuizSubmitResponse,
+  QuizAnswerRecord,
 } from '../types/quizAttempt.types';
 
 const authHeaders = (token: string) => ({
@@ -33,6 +34,7 @@ export const fetchQuizAttemptSummary = async (
     return {
       id: Number(r.id ?? 0),
       module_id: Number(r.module_id ?? moduleId),
+      user_id: Number(r.user_id ?? 0),
       started_at: String(r.started_at ?? ''),
       completed_at: r.completed_at ? String(r.completed_at) : null,
       final_score: r.final_score != null ? Number(r.final_score) : null,
@@ -119,6 +121,47 @@ export const submitAnswer = async (
       body: JSON.stringify({ chosen_option: selectedOption }),
     }
   );
+};
+
+/**
+ * GET /quiz-attempts/{attempt_id}/answers
+ * Returns previously submitted answers for an in-progress attempt.
+ */
+export const fetchAttemptAnswers = async (
+  token: string,
+  attemptId: number
+): Promise<QuizAnswerRecord[]> => {
+  try {
+    const raw = await apiFetch<unknown>(`/quiz-attempts/${attemptId}/answers`, {
+      method: 'GET',
+      headers: authHeaders(token),
+    });
+
+    return normalizeList(raw).map((item) => {
+      const entry = item as Record<string, unknown>;
+      return {
+        id: Number(entry.id ?? 0),
+        question_id: Number(entry.question_id ?? 0),
+        attempt_id: Number(entry.attempt_id ?? attemptId),
+        is_correct: Boolean(entry.is_correct),
+        difficulty_at_time: String(entry.difficulty_at_time ?? 'medium'),
+      };
+    });
+  } catch {
+    return [];
+  }
+};
+
+const normalizeList = (rawValue: unknown): unknown[] => {
+  if (Array.isArray(rawValue)) {
+    return rawValue;
+  }
+
+  if (rawValue && typeof rawValue === 'object' && Array.isArray((rawValue as { data?: unknown[] }).data)) {
+    return (rawValue as { data: unknown[] }).data;
+  }
+
+  return [];
 };
 
 // ─── Certificate download ─────────────────────────────────────────────────────

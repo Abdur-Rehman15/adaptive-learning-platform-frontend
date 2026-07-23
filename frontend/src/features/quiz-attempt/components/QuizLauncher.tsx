@@ -6,9 +6,10 @@ interface QuizLauncherProps {
   moduleId: number;
   moduleTitle: string;
   moduleOrder: number;
+  compact?: boolean;
 }
 
-export const QuizLauncher = ({ moduleId, moduleTitle, moduleOrder }: QuizLauncherProps) => {
+export const QuizLauncher = ({ moduleId, moduleTitle, moduleOrder, compact = false }: QuizLauncherProps) => {
   const navigate = useNavigate();
   const { phase, hasPreviousAttempt, previousScore, errorMessage, loadSummary } =
     useQuizAttempt(moduleId);
@@ -25,6 +26,40 @@ export const QuizLauncher = ({ moduleId, moduleTitle, moduleOrder }: QuizLaunche
 
   const hasPassed =
     hasPreviousAttempt && previousScore !== null && previousScore >= 50;
+
+  if (compact) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        {hasPreviousAttempt && previousScore !== null && (
+          <span
+            className={`quiz-launcher__score ${hasPassed ? 'quiz-launcher__score--pass' : 'quiz-launcher__score--fail'}`}
+            style={{ fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+          >
+            Best: {previousScore.toFixed(0)}%
+          </span>
+        )}
+
+        {isLoading ? (
+          <span className="quiz-launcher__loading" style={{ fontSize: '0.7rem' }}>CHECKING…</span>
+        ) : (
+          <button
+            id={`quiz-launcher-btn-${moduleId}`}
+            type="button"
+            className={`dashboard-btn ${hasPreviousAttempt ? 'dashboard-btn--sunken' : 'dashboard-btn--primary'} quiz-launcher__btn`}
+            style={{ padding: '4px 10px', fontSize: '0.7rem', textTransform: 'uppercase', height: '28px', minHeight: 'auto', boxShadow: '2px 2px 0 0 var(--color-border)' }}
+            onClick={handleLaunch}
+            aria-label={`${hasPreviousAttempt ? 'Retry quiz' : 'Start quiz'} for ${moduleTitle}`}
+          >
+            {hasPreviousAttempt ? 'Retry Quiz' : 'Start Quiz'}
+          </button>
+        )}
+
+        {errorMessage && (
+          <span style={{ fontSize: '0.7rem', color: 'var(--color-danger)' }}>!</span>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="quiz-launcher">
@@ -74,3 +109,4 @@ export const QuizLauncher = ({ moduleId, moduleTitle, moduleOrder }: QuizLaunche
     </div>
   );
 };
+

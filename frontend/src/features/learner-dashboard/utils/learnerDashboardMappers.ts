@@ -100,6 +100,12 @@ export const normalizeCourseSummary = (
     fallbackCourse?.courseTitle ?? 'Selected course'
   );
 
+  // Backend returns: course_id, progress_percent, average_quiz_score, weakest_topics
+  const rawWeakestTopics = entry.weakest_topics ?? entry.weakestTopics;
+  const weakestTopics: string[] = Array.isArray(rawWeakestTopics)
+    ? rawWeakestTopics.filter((t): t is string => typeof t === 'string')
+    : [];
+
   return {
     courseId: toText(
       entry.course_id ?? entry.courseId ?? fallbackCourse?.courseId,
@@ -111,69 +117,41 @@ export const normalizeCourseSummary = (
     ),
     averageScore: clampPercentage(
       toNumber(
-        entry.average_score ?? entry.averageScore ?? entry.final_score ?? entry.score,
+        entry.average_quiz_score ?? entry.average_score ?? entry.averageScore ?? entry.final_score ?? entry.score,
         0
       )
     ),
-    completedModules: Math.max(
-      0,
-      Math.round(
-        toNumber(
-          entry.completed_modules ?? entry.completedModules ?? entry.modules_completed,
-          0
-        )
-      )
-    ),
-    totalModules: Math.max(
-      0,
-      Math.round(
-        toNumber(entry.total_modules ?? entry.totalModules ?? entry.modules_total, 0)
-      )
-    ),
-    completedQuizzes: Math.max(
-      0,
-      Math.round(
-        toNumber(
-          entry.completed_quizzes ?? entry.completedQuizzes ?? entry.quizzes_completed,
-          0
-        )
-      )
-    ),
-    totalQuizzes: Math.max(
-      0,
-      Math.round(
-        toNumber(entry.total_quizzes ?? entry.totalQuizzes ?? entry.quizzes_total, 0)
-      )
-    ),
-    certificateReady: toBoolean(
-      entry.certificate_ready ?? entry.certificateReady ?? entry.certificate_available,
-      false
-    ),
+    weakestTopics,
   };
 };
 
 export const normalizeScoreTrends = (rawValue: unknown): LearnerScoreTrend[] => {
-  return normalizeList(rawValue)
-    .map((item, index) => {
-      const entry = isRecord(item) ? item : {};
+  // The backend returns one entry per quiz attempt (ordered oldest → newest).
+  // Multiple attempts on the same module inflate the count, so we deduplicate
+  // by module title — keeping the *latest* score (last write wins).
+  const latestByModule = new Map<string, number>();
 
-      return {
-        label: toText(
-          entry.module_title ??
-            entry.moduleTitle ??
-            entry.label ??
-            entry.module ??
-            entry.name ??
-            entry.attempt_date ??
-            entry.date,
-          `Module ${index + 1}`
-        ),
-        score: clampPercentage(
-          toNumber(entry.score ?? entry.average_score ?? entry.averageScore ?? entry.value, 0)
-        ),
-      };
-    })
-    .slice(0, 6);
+  normalizeList(rawValue).forEach((item, index) => {
+    const entry = isRecord(item) ? item : {};
+    const label = toText(
+      entry.module_title ??
+        entry.moduleTitle ??
+        entry.label ??
+        entry.module ??
+        entry.name ??
+        entry.attempt_date ??
+        entry.date,
+      `Module ${index + 1}`
+    );
+    const score = clampPercentage(
+      toNumber(entry.final_score ?? entry.score ?? entry.average_score ?? entry.averageScore ?? entry.value, 0)
+    );
+    // Overwrite: since attempts are ordered asc by completed_at, the last
+    // overwrite per module_title is the most recent attempt.
+    latestByModule.set(label, score);
+  });
+
+  return Array.from(latestByModule.entries()).map(([label, score]) => ({ label, score }));
 };
 
 export const buildDashboardStats = (

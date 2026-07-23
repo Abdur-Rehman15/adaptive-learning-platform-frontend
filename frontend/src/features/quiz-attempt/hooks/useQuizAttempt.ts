@@ -7,8 +7,9 @@ import {
   submitAnswer,
   submitQuizAttempt,
   fetchQuizAttemptSummary,
+  fetchAttemptAnswers,
 } from '../api/quizAttempt.api';
-import type { QuizState, QuizPhase } from '../types/quizAttempt.types';
+import type { QuizState } from '../types/quizAttempt.types';
 import type { Question } from '@/features/course-questions/types/courseQuestions.types';
 
 // ─── State machine ────────────────────────────────────────────────────────────
@@ -22,7 +23,15 @@ type QuizAction =
       isInProgress: boolean;
     }
   | { type: 'START_LOADING' }
-  | { type: 'QUIZ_STARTED'; attempt_id: number; module_id: number; user_id: number; started_at: string; question: Question }
+  | {
+      type: 'QUIZ_STARTED';
+      attempt_id: number;
+      module_id: number;
+      user_id: number;
+      started_at: string;
+      question: Question | null;
+      answeredQuestionIds?: number[];
+    }
   | { type: 'ANSWER_SUBMITTED'; nextQuestion: Question | null }
   | { type: 'SUBMIT_LOADING' }
   | { type: 'QUIZ_COMPLETED'; finalScore: number }
@@ -43,12 +52,12 @@ const initialState: QuizState = {
 function quizReducer(state: QuizState, action: QuizAction): QuizState {
   switch (action.type) {
     case 'FETCH_SUMMARY_START':
-      return { ...state, phase: 'loading-summary' };
+      return { ...state, phase: 'loading-summary', errorMessage: null };
 
     case 'FETCH_SUMMARY_DONE':
       return {
         ...state,
-        phase: action.isInProgress ? 'idle' : 'idle',
+        phase: 'idle',
         hasPreviousAttempt: action.hasPrevious,
         previousScore: action.previousScore,
       };
@@ -69,7 +78,7 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
           final_score: null,
         },
         currentQuestion: action.question,
-        answeredQuestionIds: [],
+        answeredQuestionIds: action.answeredQuestionIds ?? [],
         finalScore: null,
         errorMessage: null,
       };
@@ -82,7 +91,6 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
       return {
         ...state,
         answeredQuestionIds: newAnswered,
-        // null next_question → all questions answered, ready to submit
         currentQuestion: action.nextQuestion,
         phase: 'in-progress',
       };
@@ -108,12 +116,29 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
       return { ...state, phase: 'error', errorMessage: action.message };
 
     case 'RESET':
-      return { ...initialState, hasPreviousAttempt: state.hasPreviousAttempt, previousScore: state.previousScore };
+      return {
+        ...initialState,
+        hasPreviousAttempt: state.hasPreviousAttempt,
+        previousScore: state.previousScore,
+      };
 
     default:
       return state;
   }
 }
+
+const parseErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : 'Something went wrong with the quiz.';
+
+const extractSubmitScore = (response: QuizSubmitResponse | Record<string, unknown>) => {
+  const rawScore =
+    (response as QuizSubmitResponse).final_score ??
+    (response as Record<string, unknown>).finalScore ??
+    (response as Record<string, unknown>).score ??
+    (response as { attempt?: { final_score?: number } }).attempt?.final_score;
+
+  return rawScore != null && Number.isFinite(Number(rawScore)) ? Number(rawScore) : null;
+};
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
@@ -122,127 +147,184 @@ export const useQuizAttempt = (moduleId: number) => {
   const queryClient = useQueryClient();
   const [state, dispatch] = useReducer(quizReducer, initialState);
 
-  /** Load summary on mount (called from QuizLauncher) */
-  const loadSummary = useCallback(async () => {
-    if (!token) return;
+  const syncSummary = useCallback(async () => {
+    if (!token) return null;
+
     dispatch({ type: 'FETCH_SUMMARY_START' });
     const summary = await fetchQuizAttemptSummary(token, moduleId);
+
     dispatch({
       type: 'FETCH_SUMMARY_DONE',
       hasPrevious: summary !== null && summary.final_score !== null,
       previousScore: summary?.final_score ?? null,
       isInProgress: summary?.is_in_progress ?? false,
     });
+
+    return summary;
   }, [token, moduleId]);
 
-  /** Start or resume a quiz */
+  const beginAttempt = useCallback(
+    async (mode: 'start' | 'retry') => {
+      if (!token) return;
+
+      dispatch({ type: 'START_LOADING' });
+
+      try {
+        const summary = await fetchQuizAttemptSummary(token, moduleId);
+        const response =
+          mode === 'retry'
+            ? await retryQuizAttempt(token, moduleId)
+            : await startQuizAttempt(token, moduleId);
+
+        const answeredQuestionIds =
+          summary?.is_in_progress && mode === 'start'
+            ? (await fetchAttemptAnswers(token, response.attempt.id)).map(
+                (answer) => answer.question_id
+              )
+            : [];
+
+        dispatch({
+          type: 'QUIZ_STARTED',
+          attempt_id: response.attempt.id,
+          module_id: response.attempt.module_id,
+          user_id: response.attempt.user_id,
+          started_at: response.attempt.started_at,
+          question: response.next_question,
+          answeredQuestionIds,
+        });
+      } catch (error) {
+        const message = parseErrorMessage(error);
+
+        if (
+          mode === 'start' &&
+          message.toLowerCase().includes('no unanswered questions remain')
+        ) {
+          const summary = await fetchQuizAttemptSummary(token, moduleId);
+          if (summary?.is_in_progress) {
+            const answeredQuestionIds = (await fetchAttemptAnswers(token, summary.id)).map(
+              (answer) => answer.question_id
+            );
+
+            dispatch({
+              type: 'QUIZ_STARTED',
+              attempt_id: summary.id,
+              module_id: summary.module_id,
+              user_id: summary.user_id,
+              started_at: summary.started_at,
+              question: null,
+              answeredQuestionIds,
+            });
+            return;
+          }
+        }
+
+        dispatch({ type: 'ERROR', message });
+      }
+    },
+    [token, moduleId]
+  );
+
+  /** Load summary and start/resume/show completed state on page entry */
+  const initializeQuiz = useCallback(async () => {
+    if (!token) return;
+
+    try {
+      const summary = await syncSummary();
+
+      if (summary?.completed_at && summary.final_score != null) {
+        dispatch({ type: 'QUIZ_COMPLETED', finalScore: summary.final_score });
+        return;
+      }
+
+      await beginAttempt('start');
+    } catch (error) {
+      dispatch({ type: 'ERROR', message: parseErrorMessage(error) });
+    }
+  }, [token, syncSummary, beginAttempt]);
+
+  const loadSummary = syncSummary;
+
   const startQuiz = useCallback(async () => {
-    if (!token) return;
-    dispatch({ type: 'START_LOADING' });
-    try {
-      const res = await startQuizAttempt(token, moduleId);
-      dispatch({
-        type: 'QUIZ_STARTED',
-        attempt_id: res.attempt.id,
-        module_id: res.attempt.module_id,
-        user_id: res.attempt.user_id,
-        started_at: res.attempt.started_at,
-        question: res.next_question,
-      });
-    } catch (err) {
-      dispatch({ type: 'ERROR', message: (err as Error).message });
-    }
-  }, [token, moduleId]);
+    await beginAttempt('start');
+  }, [beginAttempt]);
 
-  /** Retry — start a fresh attempt */
   const retryQuiz = useCallback(async () => {
-    if (!token) return;
-    dispatch({ type: 'START_LOADING' });
-    try {
-      const res = await retryQuizAttempt(token, moduleId);
-      dispatch({
-        type: 'QUIZ_STARTED',
-        attempt_id: res.attempt.id,
-        module_id: res.attempt.module_id,
-        user_id: res.attempt.user_id,
-        started_at: res.attempt.started_at,
-        question: res.next_question,
-      });
-    } catch (err) {
-      dispatch({ type: 'ERROR', message: (err as Error).message });
-    }
-  }, [token, moduleId]);
+    await beginAttempt('retry');
+  }, [beginAttempt]);
 
-  /** Submit an answer for the current question */
   const answerQuestion = useCallback(
     async (selectedOption: string) => {
       if (!token || !state.attempt || !state.currentQuestion) return;
+
       try {
-        const res = await submitAnswer(
+        const response = await submitAnswer(
           token,
           state.currentQuestion.id,
           state.attempt.id,
           selectedOption
         );
-        dispatch({ type: 'ANSWER_SUBMITTED', nextQuestion: res.next_question });
-      } catch (err) {
-        dispatch({ type: 'ERROR', message: (err as Error).message });
+        dispatch({ type: 'ANSWER_SUBMITTED', nextQuestion: response.next_question });
+      } catch (error) {
+        dispatch({ type: 'ERROR', message: parseErrorMessage(error) });
       }
     },
     [token, state.attempt, state.currentQuestion]
   );
 
-  /** Final submit — calculate score */
   const finishQuiz = useCallback(async () => {
     if (!token || !state.attempt) return;
+
     dispatch({ type: 'SUBMIT_LOADING' });
+
     try {
-      const res = await submitQuizAttempt(token, moduleId);
-      console.log('Quiz submission raw response:', res);
+      const response = await submitQuizAttempt(token, moduleId);
+      let finalScore = extractSubmitScore(response);
 
-      // ── Primary: parse score from submit response ──────────────────────────
-      const rawScore = res && (
-        (res as any).final_score ??
-        (res as any).finalScore ??
-        (res as any).score ??
-        (res as any).attempt?.final_score ??
-        (res as any).attempt?.finalScore ??
-        (res as any).attempt?.score
-      );
-      const scoreFromSubmit = rawScore != null ? Number(rawScore) : null;
-
-      // ── Fallback: fetch the authoritative score from the GET summary ────────
-      // This guarantees we always show the real DB-persisted score even if the
-      // submit response body is shaped differently than expected.
-      let finalScore = scoreFromSubmit;
-      if (finalScore === null || finalScore === 0) {
+      if (finalScore === null) {
         const summary = await fetchQuizAttemptSummary(token, moduleId);
-        console.log('Quiz summary fallback response:', summary);
-        if (summary?.final_score != null && summary.final_score > 0) {
+        if (summary?.final_score != null) {
           finalScore = summary.final_score;
         }
       }
 
-      const score = finalScore ?? 0;
-      dispatch({ type: 'QUIZ_COMPLETED', finalScore: score });
+      dispatch({ type: 'QUIZ_COMPLETED', finalScore: finalScore ?? 0 });
 
-      // Invalidate all relevant queries so progress updates across the app
       void queryClient.invalidateQueries({ queryKey: ['learner-dashboard'] });
       void queryClient.invalidateQueries({ queryKey: ['student-courses'] });
-    } catch (err) {
-      dispatch({ type: 'ERROR', message: (err as Error).message });
+    } catch (error) {
+      dispatch({ type: 'ERROR', message: parseErrorMessage(error) });
     }
   }, [token, state.attempt, moduleId, queryClient]);
+
+  const recoverFromError = useCallback(async () => {
+    if (!token) return;
+
+    const message = state.errorMessage?.toLowerCase() ?? '';
+
+    if (message.includes('already completed') || message.includes('retry instead')) {
+      await retryQuiz();
+      return;
+    }
+
+    if (message.includes('never started') && state.hasPreviousAttempt) {
+      await startQuiz();
+      return;
+    }
+
+    await initializeQuiz();
+  }, [token, state.errorMessage, state.hasPreviousAttempt, retryQuiz, startQuiz, initializeQuiz]);
 
   const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
 
   return {
     ...state,
     loadSummary,
+    initializeQuiz,
     startQuiz,
     retryQuiz,
     answerQuestion,
     finishQuiz,
+    recoverFromError,
     reset,
   };
 };

@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useAuth } from '@/features/auth/context/AuthContext';
-import { StudentCoursesView } from '@/features/studentCourses/components/StudentCoursesView';
-import { AdminCoursesView } from '@/features/admin-dashboard/components/AdminCoursesView';
+import { MyLearningView } from '@/features/studentCourses/components/MyLearningView';
 
-export const CoursesPage = () => {
+export const MyLearningPage = () => {
   const { user, role, isHydrating } = useAuth();
   const navigate = useNavigate();
 
@@ -61,10 +60,11 @@ export const CoursesPage = () => {
     <div className="app-shell">
       <Navbar role={role} />
       <main className="app-shell__content">
-        {role === 'admin' ? <AdminCoursesView /> : <StudentCoursesView />}
+        <MyLearningView />
       </main>
       <Footer role={role} />
     </div>
   );
 };
-export default CoursesPage;
+
+export default MyLearningPage;

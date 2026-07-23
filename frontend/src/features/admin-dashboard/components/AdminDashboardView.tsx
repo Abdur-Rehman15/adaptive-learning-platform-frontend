@@ -1,9 +1,122 @@
+import type { CSSProperties } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAdminDashboard } from '../hooks/useAdminDashboard';
 import { AdminCourseSelector } from './AdminCourseSelector';
 import { ModuleMetricsList } from './ModuleMetricsList';
 import { LearnerProgressTable } from './LearnerProgressTable';
-import { useAuth } from '@/features/auth/context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { AdminStatCard } from './AdminStatCard';
+
+/* ── Inline SVG icons ─────────────────────────────────────────── */
+
+const IconBooks = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M3 4h5v12H3a1 1 0 01-1-1V5a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M8 4h5v12H8V4z" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M13 4h4a1 1 0 011 1v10a1 1 0 01-1 1h-4V4z" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
+const IconUsers = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <circle cx="8" cy="7" r="3" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M2 17c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="14" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M14 12c2.5 0 4 1.2 4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const IconChart = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M3 17V3M3 17h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <rect x="6" y="10" width="3" height="7" rx="1" fill="currentColor" opacity="0.85" />
+    <rect x="11" y="6" width="3" height="11" rx="1" fill="currentColor" opacity="0.85" />
+    <rect x="16" y="8" width="3" height="9" rx="1" fill="currentColor" opacity="0.85" />
+  </svg>
+);
+
+const IconTrophy = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M6 3h8v3a4 4 0 01-8 0V3z" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M4 3H2v2a2 2 0 002 2M16 3h2v2a2 2 0 01-2 2" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M10 10v3M7 17h6M8 13h4v4H8v-4z" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
+const IconPulse = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M1 8h3l2-5 3 10 2-5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconWarning = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M8 2L1 14h14L8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <path d="M8 7v3M8 12h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const AdminLoading = ({ message }: { message: string }) => (
+  <div className="admin-loading">
+    <div className="admin-loading__spinner" role="status" aria-label="Loading" />
+    <p className="admin-loading__text">{message}</p>
+  </div>
+);
+
+const ProgressRing = ({
+  percent,
+  color = 'var(--admin-indigo)',
+  label,
+}: {
+  percent: number;
+  color?: string;
+  label: string;
+}) => {
+  const size = 120;
+  const stroke = 9;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const clamped = Math.min(100, Math.max(0, percent));
+  const offset = circumference - (clamped / 100) * circumference;
+
+  return (
+    <div className="admin-metric-ring">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="var(--color-border)"
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          className="admin-metric-ring__arc"
+        />
+      </svg>
+      <div className="admin-metric-ring__center">
+        <span className="admin-metric-ring__value" style={{ color }}>{clamped}%</span>
+        <span className="admin-metric-ring__label">{label}</span>
+      </div>
+    </div>
+  );
+};
+
+const getInitials = (name?: string | null): string => {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
 
 export const AdminDashboardView = () => {
   const {
@@ -11,7 +124,6 @@ export const AdminDashboardView = () => {
     courses,
     selectedCourseId,
     setSelectedCourseId,
-    selectedCourse,
     dashboardStats,
     dashboardData,
     isLoadingCourses,
@@ -19,218 +131,208 @@ export const AdminDashboardView = () => {
     coursesError,
   } = useAdminDashboard();
 
-  const { clearSession } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    clearSession();
-    navigate('/login');
-  };
-
   if (isLoadingCourses) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
-        <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.875rem' }}>SYNCING INSTRUCTOR WORKSPACE…</p>
-      </div>
-    );
+    return <AdminLoading message="Syncing instructor workspace…" />;
   }
 
   if (coursesError) {
     return (
-      <div className="auth-card" style={{ margin: '48px auto', textAlign: 'center' }}>
-        <p className="auth-card__error">Error loading instructor courses: {coursesError.message}</p>
+      <div className="admin-error">
+        <IconWarning />
+        <p className="admin-error__text">
+          Error loading instructor courses: {coursesError.message}
+        </p>
+        <button
+          type="button"
+          className="dashboard-btn dashboard-btn--primary"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      {/* Welcome & User Details Banner */}
-      <div 
-        style={{ 
-          border: '2px solid var(--color-border)', 
-          borderRadius: '16px', 
-          padding: '32px', 
-          background: 'var(--color-surface)',
-          boxShadow: '4px 4px 0px 0px var(--color-border)',
-          position: 'relative'
-        }}
-      >
-        <div 
-          style={{ 
-            position: 'absolute', 
-            top: '-14px', 
-            left: '24px', 
-            background: 'var(--color-accent)', 
-            color: '#ffffff', 
-            border: '2px solid var(--color-border)', 
-            borderRadius: '4px', 
-            padding: '4px 10px', 
-            fontSize: '0.75rem', 
-            fontWeight: 700, 
-            letterSpacing: '0.05em', 
-            textTransform: 'uppercase' 
-          }}
-        >
-          Instructor Console
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-          <div>
-            <h1 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>
-              Welcome back, {user?.username}
-            </h1>
-            <p style={{ color: 'var(--color-ink-soft)', margin: 0 }}>
-              Monitor course metrics, curriculum delivery progress, and student grades.
-            </p>
+    <div className="admin-dashboard">
+      {/* Hero */}
+      <section className="admin-hero">
+        <div className="admin-hero__inner">
+          <div className="admin-hero__identity">
+            <div className="admin-hero__avatar" aria-hidden="true">
+              {getInitials(user?.username)}
+            </div>
+            <div>
+              <p className="admin-hero__eyebrow">Instructor Console</p>
+              <h1 className="admin-hero__title">
+                Welcome back, {user?.username ?? 'Instructor'}
+              </h1>
+              <p className="admin-hero__subtitle">
+                Monitor cohort performance, module metrics, and learner grades across your courses.
+              </p>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="admin-hero__actions">
+            {courses.length > 0 && (
+              <div className="admin-hero__badge">
+                <IconPulse />
+                <span>
+                  {dashboardStats.activeLearners} active learner
+                  {dashboardStats.activeLearners !== 1 ? 's' : ''} this week
+                </span>
+              </div>
+            )}
             <button
+              type="button"
               onClick={() => navigate('/courses/create')}
+              className="dashboard-btn dashboard-btn--accent"
+            >
+              + New Course
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/courses')}
               className="dashboard-btn dashboard-btn--primary"
             >
-              + Create New Course
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="dashboard-btn dashboard-btn--sunken"
-            >
-              Sign out
+              Manage Courses
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Global Instructor Stats readouts */}
+      {/* Global stat cards */}
       {courses.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-          <article className="dashboard-stat-card">
-            <p className="dashboard-stat-card__label">Courses Managed</p>
-            <p className="dashboard-stat-card__value">{dashboardStats.coursesManaged}</p>
-            <p className="dashboard-stat-card__meta">Total course syllabi authored</p>
-          </article>
-          
-          <article className="dashboard-stat-card">
-            <p className="dashboard-stat-card__label">Total Learners</p>
-            <p className="dashboard-stat-card__value">{dashboardStats.totalLearners}</p>
-            <p className="dashboard-stat-card__meta">Enrolled across all courses</p>
-          </article>
-
-          <article className="dashboard-stat-card" style={{ borderColor: 'var(--color-accent)' }}>
-            <p className="dashboard-stat-card__label">Active Progressing</p>
-            <p className="dashboard-stat-card__value">{dashboardStats.activeLearners}</p>
-            <p className="dashboard-stat-card__meta">Learners with active sessions</p>
-          </article>
-
-          <article className="dashboard-stat-card">
-            <p className="dashboard-stat-card__label">Certificates Issued</p>
-            <p className="dashboard-stat-card__value">{dashboardData?.summary?.certificatesIssued ?? 0}</p>
-            <p className="dashboard-stat-card__meta">Students who completed syllabus</p>
-          </article>
-
-          <article className="dashboard-stat-card">
-            <p className="dashboard-stat-card__label">Cohort Avg Score</p>
-            <p className="dashboard-stat-card__value">{dashboardStats.averageScore}%</p>
-            <p className="dashboard-stat-card__meta">Quiz accuracy across tracks</p>
-          </article>
+        <div className="admin-stat-row">
+          <AdminStatCard
+            label="Courses Managed"
+            value={String(dashboardStats.coursesManaged)}
+            meta="Active curriculum tracks"
+            icon={<IconBooks />}
+            accentColor="var(--admin-indigo)"
+          />
+          <AdminStatCard
+            label="Total Learners"
+            value={String(dashboardStats.totalLearners)}
+            meta="Enrolled across all courses"
+            icon={<IconUsers />}
+            accentColor="var(--admin-teal)"
+          />
+          <AdminStatCard
+            label="Cohort Avg Score"
+            value={`${dashboardStats.averageScore}%`}
+            meta="Quiz performance index"
+            icon={<IconChart />}
+            accentColor="var(--admin-amber)"
+          />
+          <AdminStatCard
+            label="Completions"
+            value={String(dashboardStats.completedLearners)}
+            meta="Certificates issued"
+            icon={<IconTrophy />}
+            accentColor="var(--admin-rose)"
+          />
         </div>
       )}
 
-      {/* Course Focus grid */}
+      {/* Analytics */}
       {courses.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2.2fr', gap: '32px', alignItems: 'start' }} className="responsive-dashboard-grid">
-          {/* Left: course lists */}
+        <div className="admin-dashboard-layout">
           <AdminCourseSelector
             courses={courses}
             selectedCourseId={selectedCourseId}
             onSelectCourse={setSelectedCourseId}
           />
 
-          {/* Right: course analytics details */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="admin-detail-column">
             {isLoadingDashboard ? (
-              <div className="dashboard-panel" style={{ padding: '48px', textAlign: 'center' }}>
-                <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.875rem' }}>SYNCING COURSE ANALYTICS…</p>
+              <div className="dashboard-panel admin-panel-loading">
+                <AdminLoading message="Syncing course analytics…" />
               </div>
             ) : dashboardData ? (
               <>
-                {/* Course Header summary */}
-                <section className="dashboard-panel">
+                <section className="dashboard-panel admin-summary-panel">
                   <div className="dashboard-panel__header">
                     <div>
-                      <p className="dashboard-panel__eyebrow" style={{ color: 'var(--color-accent)' }}>Focus Overview</p>
-                      <h2 className="dashboard-panel__title">{dashboardData.summary.courseTitle} Stats</h2>
+                      <p className="dashboard-panel__eyebrow admin-eyebrow">Focus Overview</p>
+                      <h2 className="dashboard-panel__title">{dashboardData.summary.courseTitle}</h2>
                     </div>
                     <p className="dashboard-panel__description">
-                      Delivery metrics and completion summary of course ID: {dashboardData.summary.courseId}
+                      {dashboardData.summary.totalLearners} enrolled ·{' '}
+                      {dashboardData.summary.certificatesIssued} certificates issued
                     </p>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginTop: '24px' }}>
-                    <div style={{ border: '2px solid var(--color-border)', borderRadius: '8px', padding: '16px', background: 'var(--color-surface-sunken)' }}>
-                      <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-soft)', marginBottom: '8px' }}>
-                        Curriculum Progress
-                      </p>
-                      <p style={{ fontSize: '1.3rem', fontWeight: 800 }}>
-                        {dashboardData.summary.averageProgress}% <span style={{ fontSize: '0.85rem', color: 'var(--color-ink-soft)' }}>avg progress</span>
-                      </p>
+                  <div className="admin-metrics-grid">
+                    <div className="admin-metric-card">
+                      <ProgressRing
+                        percent={dashboardData.summary.averageProgress}
+                        color="var(--admin-indigo)"
+                        label="Avg Progress"
+                      />
                     </div>
-
-                    <div style={{ border: '2px solid var(--color-border)', borderRadius: '8px', padding: '16px', background: 'var(--color-surface-sunken)' }}>
-                      <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-soft)', marginBottom: '8px' }}>
-                        Completion Rate
-                      </p>
-                      <p style={{ fontSize: '1.3rem', fontWeight: 800 }}>
-                        {dashboardData.summary.completionRate}% <span style={{ fontSize: '0.85rem', color: 'var(--color-ink-soft)' }}>finished</span>
-                      </p>
+                    <div className="admin-metric-card">
+                      <ProgressRing
+                        percent={dashboardData.summary.completionRate}
+                        color="var(--admin-teal)"
+                        label="Completion"
+                      />
                     </div>
+                    <div className="admin-metric-card">
+                      <ProgressRing
+                        percent={dashboardData.summary.averageScore}
+                        color="var(--admin-rose)"
+                        label="Avg Grade"
+                      />
+                    </div>
+                  </div>
 
-                    <div style={{ border: '2px solid var(--color-border)', borderRadius: '8px', padding: '16px', background: 'var(--color-surface-sunken)' }}>
-                      <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-soft)', marginBottom: '8px' }}>
-                        Average Grade
-                      </p>
-                      <p style={{ fontSize: '1.3rem', fontWeight: 800 }}>
-                        {dashboardData.summary.averageScore}% <span style={{ fontSize: '0.85rem', color: 'var(--color-ink-soft)' }}>quiz average</span>
-                      </p>
+                  <div className="admin-mini-stats">
+                    <div className="admin-mini-stat">
+                      <span className="admin-mini-stat__value">{dashboardData.summary.activeLearners}</span>
+                      <span className="admin-mini-stat__label">Active</span>
+                    </div>
+                    <div className="admin-mini-stat">
+                      <span className="admin-mini-stat__value">{dashboardData.summary.completedLearners}</span>
+                      <span className="admin-mini-stat__label">Completed</span>
+                    </div>
+                    <div className="admin-mini-stat">
+                      <span className="admin-mini-stat__value">{dashboardData.modules.length}</span>
+                      <span className="admin-mini-stat__label">Modules</span>
                     </div>
                   </div>
                 </section>
 
-                {/* Modules Performance metric */}
                 <ModuleMetricsList modules={dashboardData.modules} />
-
-                {/* Enrolled Learners progress list */}
                 <LearnerProgressTable learners={dashboardData.topLearners} />
 
-                {/* Recent Activities Log */}
                 {dashboardData.recentActivity.length > 0 && (
-                  <section className="dashboard-panel">
+                  <section className="dashboard-panel admin-activity-panel">
                     <div className="dashboard-panel__header">
                       <div>
-                        <p className="dashboard-panel__eyebrow" style={{ color: 'var(--color-accent)' }}>Logs</p>
+                        <p className="dashboard-panel__eyebrow admin-eyebrow">Live Feed</p>
                         <h2 className="dashboard-panel__title">Course Activity Stream</h2>
                       </div>
                       <p className="dashboard-panel__description">
-                        Latest updates on student completions and quiz submissions.
+                        Latest completions and quiz submissions.
                       </p>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
+                    <div className="admin-activity-timeline">
                       {dashboardData.recentActivity.map((activity, idx) => (
-                        <div 
-                          key={idx} 
-                          style={{ 
-                            display: 'flex', 
-                            gap: '12px', 
-                            padding: '12px', 
-                            border: '2px solid var(--color-border)', 
-                            borderRadius: '8px',
-                            background: 'var(--color-surface)' 
-                          }}
-                        >
-                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: 'var(--color-accent)' }}>
-                            [{String(idx + 1).padStart(2, '0')}]
-                          </span>
-                          <span style={{ fontSize: '0.9rem' }}>{activity}</span>
+                        <div key={idx} className="admin-activity-timeline__item">
+                          <div
+                            className="admin-activity-timeline__marker"
+                            data-variant={idx % 3}
+                            aria-hidden="true"
+                          />
+                          <div className="admin-activity-timeline__content">
+                            <span className="admin-activity-timeline__index">
+                              {String(idx + 1).padStart(2, '0')}
+                            </span>
+                            <span className="admin-activity-timeline__text">{activity}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -238,23 +340,29 @@ export const AdminDashboardView = () => {
                 )}
               </>
             ) : (
-              <div className="dashboard-panel" style={{ padding: '48px', textAlign: 'center' }}>
-                <p>No dashboard analysis is available for this course.</p>
+              <div className="dashboard-panel admin-empty-panel">
+                <p className="dashboard-panel__empty">
+                  No dashboard analytics available for this course yet.
+                </p>
               </div>
             )}
           </div>
         </div>
       ) : (
-        <section className="dashboard-empty">
+        <section className="dashboard-empty admin-empty-state">
+          <div className="admin-empty-state__icon" aria-hidden="true">
+            <IconBooks />
+          </div>
           <p className="dashboard-empty__eyebrow">Instructor Control Empty</p>
-          <h2 className="dashboard-empty__title">You have not created any courses.</h2>
+          <h2 className="dashboard-empty__title">You have not created any courses yet.</h2>
           <p className="dashboard-empty__text">
-            Author a course, create modules, and set quizzes. Once learners register and enroll, their metrics, scores, and activity streams will compile here.
+            Author a course, create modules, and set quizzes. Once learners register and enroll,
+            their metrics, scores, and activity streams will compile here.
           </p>
           <button
+            type="button"
             onClick={() => navigate('/courses/create')}
             className="dashboard-btn dashboard-btn--accent"
-            style={{ marginTop: '8px' }}
           >
             + Create Your First Course
           </button>

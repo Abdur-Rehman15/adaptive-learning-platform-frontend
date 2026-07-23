@@ -1,6 +1,5 @@
 import {
   createBrowserRouter,
-  Navigate,
   RouterProvider,
 } from 'react-router-dom';
 import { LoginPage } from '@/pages/Login';
@@ -10,27 +9,33 @@ import { CreateCoursePage } from '@/pages/CreateCourse';
 import { CoursesPage } from '@/pages/Courses';
 import { CourseQuestionsPage } from '@/pages/CourseQuestions';
 import { QuizAttemptPage } from '@/pages/QuizAttempt';
+import { MyLearningPage } from '@/pages/MyLearning';
+import { LandingPage } from '@/pages/LandingPage';
 import { ProtectedRoute } from './ProtectedRoute';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/login" replace />,
+    element: <LandingPage />,
   },
-  {
-    path: '/login',
-    element: <LoginPage />,
-  },
-  {
-    path: '/register',
-    element: <RegisterPage />,
-  },
+  // {
+  //   path: '/login',
+  //   element: <LoginPage />,
+  // },
+  // {
+  //   path: '/register',
+  //   element: <RegisterPage />,
+  // },
   {
     element: <ProtectedRoute />,
     children: [
       {
         path: '/dashboard',
         element: <Dashboard />,
+      },
+      {
+        path: '/my-learning',
+        element: <MyLearningPage />,
       },
       {
         path: '/courses',

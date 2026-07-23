@@ -30,3 +30,8 @@ export interface RegisterPayload {
 }
 
 export type RegisterResponse = CurrentUserResponse;
+
+export interface UpdateUserPayload {
+  username?: string;
+  email?: string;
+}

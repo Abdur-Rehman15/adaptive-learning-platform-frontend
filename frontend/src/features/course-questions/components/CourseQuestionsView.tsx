@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useCourseModules } from '@/features/admin-dashboard/hooks/useCreateCourse';
 import type { CourseResponse, ModuleResponse } from '@/features/admin-dashboard/api/adminCourse.api';
@@ -183,18 +182,12 @@ const ModuleQuestionsPanel = ({
 };
 
 export const CourseQuestionsView = () => {
-  const { user, role, isHydrating, clearSession } = useAuth();
-  const navigate = useNavigate();
+  const { user, role, isHydrating } = useAuth();
   const questionCoursesQuery = useQuestionCourses();
   const courses: CourseResponse[] = questionCoursesQuery.data ?? [];
   const isLoading = questionCoursesQuery.isLoading;
   const error = questionCoursesQuery.error;
   const [selectedCourse, setSelectedCourse] = useState<CourseResponse | null>(null);
-
-  const handleLogout = () => {
-    clearSession();
-    navigate('/login');
-  };
 
   if (isHydrating) {
     return (
@@ -282,14 +275,6 @@ export const CourseQuestionsView = () => {
                   <p style={{ color: 'var(--color-ink-soft)', margin: 0 }}>
                     Select a course to browse its modules and manage quiz questions.
                   </p>
-                </div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={handleLogout}
-                    className="dashboard-btn dashboard-btn--sunken"
-                  >
-                    Sign out
-                  </button>
                 </div>
               </div>
             </div>

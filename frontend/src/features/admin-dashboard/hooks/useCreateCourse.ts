@@ -30,6 +30,8 @@ export const useCreateModule = (courseId: number | null) => {
     mutationFn: (payload: ModuleCreatePayload) =>
       createModule(token as string, courseId as number, payload),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-dashboard', 'courses'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-dashboard', 'data'] });
       void queryClient.invalidateQueries({ queryKey: ['course-modules', courseId] });
     },
   });

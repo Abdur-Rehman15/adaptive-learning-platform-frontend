@@ -4,78 +4,105 @@ interface LearnerProgressTableProps {
   learners: InstructorLearnerMetric[];
 }
 
+type StatusVariant = 'completed' | 'in-progress' | 'inactive';
+
+function getStatusVariant(status: string): StatusVariant {
+  const lower = status.toLowerCase();
+  if (lower.includes('complete')) return 'completed';
+  if (lower.includes('progress') || lower.includes('active')) return 'in-progress';
+  return 'inactive';
+}
+
+function getScoreClass(score: number): string {
+  if (score >= 80) return 'admin-table-score--high';
+  if (score >= 50) return 'admin-table-score--mid';
+  return 'admin-table-score--low';
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function getRankClass(rank: number): string {
+  if (rank === 1) return 'admin-rank--gold';
+  if (rank === 2) return 'admin-rank--silver';
+  if (rank === 3) return 'admin-rank--bronze';
+  return '';
+}
+
 export const LearnerProgressTable = ({ learners }: LearnerProgressTableProps) => {
   return (
-    <section className="dashboard-panel">
+    <section className="dashboard-panel admin-roster-panel">
       <div className="dashboard-panel__header">
         <div>
-          <p className="dashboard-panel__eyebrow" style={{ color: 'var(--color-accent)' }}>Roster</p>
-          <h2 className="dashboard-panel__title">Learner Progress</h2>
+          <p className="dashboard-panel__eyebrow admin-eyebrow">Roster</p>
+          <h2 className="dashboard-panel__title">Top Learners</h2>
         </div>
         <p className="dashboard-panel__description">
-          Detailed metrics of students enrolled in this course.
+          Ranked by progress and quiz performance.
         </p>
       </div>
 
       {learners.length > 0 ? (
-        <div style={{ overflowX: 'auto', marginTop: '20px' }}>
-          <table 
-            style={{ 
-              width: '100%', 
-              borderCollapse: 'collapse', 
-              textAlign: 'left',
-              border: '2px solid var(--color-border)'
-            }}
-          >
+        <div className="admin-table-container">
+          <table className="admin-table">
             <thead>
-              <tr style={{ background: 'var(--color-surface-sunken)', borderBottom: '2px solid var(--color-border)' }}>
-                <th style={{ padding: '12px', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>Learner</th>
-                <th style={{ padding: '12px', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>Progress</th>
-                <th style={{ padding: '12px', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>Average Score</th>
-                <th style={{ padding: '12px', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>Status</th>
+              <tr>
+                <th>#</th>
+                <th>Learner</th>
+                <th>Progress</th>
+                <th>Score</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              {learners.map((learner) => (
-                <tr 
-                  key={learner.id} 
-                  style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface)' }}
-                >
-                  <td style={{ padding: '12px', fontWeight: 600 }}>{learner.name}</td>
-                  <td style={{ padding: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div className="dashboard-progress dashboard-progress--soft" style={{ width: '80px', height: '6px' }}>
-                        <div 
-                          className="dashboard-progress__fill" 
-                          style={{ width: `${learner.progressPercent}%`, background: 'var(--color-accent)' }}
-                        />
-                      </div>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}>
-                        {learner.progressPercent}%
+              {learners.map((learner, index) => {
+                const variant = getStatusVariant(learner.status);
+                const rank = index + 1;
+
+                return (
+                  <tr key={learner.id} className="admin-table-row">
+                    <td>
+                      <span className={`admin-rank ${getRankClass(rank)}`}>
+                        {rank}
                       </span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
-                    {learner.score}%
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    <span 
-                      style={{ 
-                        fontSize: '0.75rem', 
-                        fontWeight: 700, 
-                        textTransform: 'uppercase',
-                        padding: '2px 6px',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: '4px',
-                        background: learner.status.toLowerCase().includes('complete') ? 'rgba(22, 163, 74, 0.1)' : 'var(--color-surface-sunken)',
-                        color: learner.status.toLowerCase().includes('complete') ? 'var(--color-success)' : 'var(--color-ink-soft)'
-                      }}
-                    >
-                      {learner.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td>
+                      <div className="admin-learner-cell">
+                        <span className="admin-learner-cell__avatar" aria-hidden="true">
+                          {getInitials(learner.name)}
+                        </span>
+                        <span className="admin-learner-cell__name">{learner.name}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="admin-progress-cell">
+                        <div className="admin-progress-bar">
+                          <div
+                            className="admin-progress-bar__fill"
+                            style={{ width: `${learner.progressPercent}%` }}
+                          />
+                        </div>
+                        <span className="admin-progress-cell__value">
+                          {learner.progressPercent}%
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`admin-table-score ${getScoreClass(learner.score)}`}>
+                        {learner.score}%
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`admin-status-chip admin-status-chip--${variant}`}>
+                        {learner.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

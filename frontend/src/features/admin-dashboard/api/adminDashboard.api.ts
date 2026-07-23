@@ -28,10 +28,18 @@ export const fetchInstructorDashboard = async (
   courseId: string,
   fallbackCourse?: InstructorCourse
 ): Promise<InstructorDashboardData> => {
-  const response = await apiFetch<unknown>(`/courses/${courseId}/instructor-dashboard`, {
-    method: 'GET',
-    headers: withAuthHeaders(token),
-  });
+  const headers = withAuthHeaders(token);
 
-  return normalizeInstructorDashboard(response, fallbackCourse);
+  const [dashboardResponse, courseModules] = await Promise.all([
+    apiFetch<unknown>(`/courses/${courseId}/instructor-dashboard`, {
+      method: 'GET',
+      headers,
+    }),
+    apiFetch<unknown>(`/courses/${courseId}/modules`, {
+      method: 'GET',
+      headers,
+    }).catch(() => []),
+  ]);
+
+  return normalizeInstructorDashboard(dashboardResponse, fallbackCourse, courseModules);
 };

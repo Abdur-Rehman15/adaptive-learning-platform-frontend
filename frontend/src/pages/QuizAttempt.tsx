@@ -29,6 +29,8 @@ export const QuizAttemptPage = () => {
     retryQuiz,
     answerQuestion,
     finishQuiz,
+    recoverFromError,
+    initializeQuiz,
   } = useQuizAttempt(moduleId);
 
   // ─── Fetch module info for context ─────────────────────────────────────────
@@ -54,11 +56,11 @@ export const QuizAttemptPage = () => {
     enabled: Boolean(token && enrollments.length > 0),
   });
 
-  // ─── Auto-start on mount ─────────────────────────────────────────────────
+  // ─── Initialize quiz: resume in-progress, show completed, or start fresh ──
   useEffect(() => {
     if (!token || !moduleId) return;
     if (phase === 'idle') {
-      void startQuiz();
+      void initializeQuiz();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, moduleId]);
@@ -206,7 +208,7 @@ export const QuizAttemptPage = () => {
                   <button
                     type="button"
                     className="dashboard-btn dashboard-btn--primary"
-                    onClick={() => void startQuiz()}
+                    onClick={() => void recoverFromError()}
                   >
                     Try Again
                   </button>

@@ -28,16 +28,14 @@ export const StudentCoursesView = () => {
   }
 
   const filteredCourses = courses.filter((course) => {
+    // Only available to enroll (NOT enrolled yet!)
+    if (course.isEnrolled) return false;
+
     const matchesSearch =
       course.title.toLowerCase().includes(search.toLowerCase()) ||
       course.description.toLowerCase().includes(search.toLowerCase());
 
-    const matchesTab =
-      filter === 'all' ||
-      (filter === 'enrolled' && course.isEnrolled) ||
-      (filter === 'available' && !course.isEnrolled);
-
-    return matchesSearch && matchesTab;
+    return matchesSearch;
   });
 
   const handleEnroll = (courseId: number) => {
@@ -48,97 +46,45 @@ export const StudentCoursesView = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       
       {/* Catalog Welcome & Information Header */}
-      <div 
-        className="dashboard-panel"
-        style={{ 
-          padding: '32px', 
-          background: 'var(--color-surface)',
-          position: 'relative'
-        }}
-      >
-        <div 
-          style={{ 
-            position: 'absolute', 
-            top: '-14px', 
-            left: '24px', 
-            background: 'var(--color-primary)', 
-            color: '#ffffff', 
-            border: '2px solid var(--color-border)', 
-            borderRadius: '4px', 
-            padding: '4px 10px', 
-            fontSize: '0.75rem', 
-            fontWeight: 700, 
-            letterSpacing: '0.05em', 
-            textTransform: 'uppercase' 
-          }}
-        >
-          Course Catalog
-        </div>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>
-            Explore Available Curriculums
-          </h1>
-          <p style={{ color: 'var(--color-ink-soft)', margin: 0 }}>
-            Browse published courses, inspect sequential lesson syllabus, and allocate them to your active student workspace.
-          </p>
-        </div>
-      </div>
+      <section className="catalog-hero">
+        <p className="catalog-hero__eyebrow">Course Catalog</p>
+        <h1 className="catalog-hero__title">Explore Available Curriculums</h1>
+        <p className="catalog-hero__subtitle">
+          Browse published courses, inspect sequential lesson syllabus, and allocate them to your active student workspace.
+        </p>
+      </section>
 
       {/* Search & Filter Control Panel */}
-      <div 
-        className="dashboard-panel" 
-        style={{ 
-          padding: '24px', 
-          display: 'flex', 
-          flexDirection: 'row', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          gap: '24px',
-          flexWrap: 'wrap'
-        }}
-      >
-        {/* Filter Tabs */}
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {(['all', 'enrolled', 'available'] as const).map((tab) => {
-            const isActive = filter === tab;
-            const labels = {
-              all: 'All Courses',
-              enrolled: 'My Enrollments',
-              available: 'Available to Enroll',
-            };
-            return (
-              <button
-                key={tab}
-                type="button"
-                className={`dashboard-btn ${isActive ? 'dashboard-btn--primary' : 'dashboard-btn--sunken'}`}
-                onClick={() => setFilter(tab)}
-                style={{ padding: '8px 16px', fontSize: '0.75rem' }}
-              >
-                {labels[tab]}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search Input */}
-        <div style={{ position: 'relative', minWidth: '260px', flex: '1', maxWidth: '400px' }}>
+      <div className="catalog-search-container">
+        <div className="catalog-search-wrap">
+          <span className="catalog-search-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M9 17A8 8 0 109 1a8 8 0 000 16zM15 15l4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </span>
           <input
             type="text"
-            placeholder="Search courses by keyword…"
+            className="catalog-search-input"
+            placeholder="Search available courses by keyword…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              border: '2px solid var(--color-border)',
-              borderRadius: '8px',
-              background: 'var(--color-surface-sunken)',
-              fontFamily: 'Spline Sans, sans-serif',
-              fontSize: '0.875rem',
-              color: 'var(--color-ink)',
-            }}
           />
         </div>
+        {filteredCourses.length > 0 && (
+          <div style={{
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            color: 'var(--color-ink-soft)',
+            fontFamily: 'JetBrains Mono, monospace',
+            background: 'var(--color-surface-sunken)',
+            padding: '8px 12px',
+            border: '2px solid var(--color-border)',
+            borderRadius: '8px',
+            whiteSpace: 'nowrap'
+          }}>
+            {filteredCourses.length} COURSE{filteredCourses.length !== 1 ? 'S' : ''} FOUND
+          </div>
+        )}
       </div>
 
       {enrollError && (

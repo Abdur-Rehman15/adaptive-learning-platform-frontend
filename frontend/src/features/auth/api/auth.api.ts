@@ -5,6 +5,7 @@ import type {
   LoginResponse,
   RegisterPayload,
   RegisterResponse,
+  UpdateUserPayload,
 } from '../types/auth.types';
 
 export const loginRequest = async (
@@ -39,6 +40,19 @@ export const registerRequest = async (
 ): Promise<RegisterResponse> => {
   return apiFetch<RegisterResponse>('/users', {
     method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateUserRequest = async (
+  token: string,
+  payload: UpdateUserPayload
+): Promise<CurrentUserResponse> => {
+  return apiFetch<CurrentUserResponse>('/users/me', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(payload),
   });
 };

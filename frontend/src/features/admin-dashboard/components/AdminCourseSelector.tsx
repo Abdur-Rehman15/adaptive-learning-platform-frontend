@@ -12,18 +12,18 @@ export const AdminCourseSelector = ({
   onSelectCourse,
 }: AdminCourseSelectorProps) => {
   return (
-    <section className="dashboard-panel">
+    <section className="dashboard-panel admin-course-panel">
       <div className="dashboard-panel__header">
         <div>
-          <p className="dashboard-panel__eyebrow" style={{ color: 'var(--color-accent)' }}>Course Catalog</p>
-          <h2 className="dashboard-panel__title">Your Authored Courses</h2>
+          <p className="dashboard-panel__eyebrow admin-eyebrow">Course Catalog</p>
+          <h2 className="dashboard-panel__title">Your Courses</h2>
         </div>
         <p className="dashboard-panel__description">
-          Select a course to inspect active student enrollment performance.
+          {courses.length} course{courses.length !== 1 ? 's' : ''} · select to inspect analytics
         </p>
       </div>
 
-      <div className="dashboard-course-list">
+      <div className="admin-course-list">
         {courses.map((course) => {
           const isSelected = course.id === selectedCourseId;
 
@@ -31,39 +31,26 @@ export const AdminCourseSelector = ({
             <button
               key={course.id}
               type="button"
-              className={`dashboard-course-card ${isSelected ? 'dashboard-course-card--selected' : ''}`}
-              style={{
-                borderColor: isSelected ? 'var(--color-accent)' : 'var(--color-border)',
-              }}
               onClick={() => onSelectCourse(course.id)}
+              className={`admin-course-item${isSelected ? ' admin-course-item--selected' : ''}`}
             >
-              <div className="dashboard-course-card__topline">
-                <span className="dashboard-course-card__title">{course.title}</span>
-                <span 
-                  className="dashboard-course-card__status"
-                  style={{
-                    background: 'rgba(225, 29, 72, 0.1)',
-                    color: 'var(--color-accent)',
-                    border: '1px solid var(--color-accent)'
-                  }}
-                >
-                  Admin
+              <span className="admin-course-item__dot" aria-hidden="true" />
+              <div className="admin-course-item__info">
+                <span className="admin-course-item__title">{course.title}</span>
+                <span className="admin-course-item__meta">
+                  {course.learnerCount} learner{course.learnerCount !== 1 ? 's' : ''}
                 </span>
               </div>
-
-              <div className="dashboard-progress dashboard-progress--soft" style={{ margin: '12px 0' }}>
-                <div
-                  className="dashboard-progress__fill"
-                  style={{ 
-                    width: `${course.completionRate}%`,
-                    background: 'var(--color-accent)'
-                  }}
-                />
-              </div>
-
-              <div className="dashboard-course-card__bottomline">
-                <span>ID: {course.id}</span>
-                <span>{course.learnerCount} learners</span>
+              <div className="admin-course-item__stats">
+                <div className="admin-course-item__progress-pill" aria-hidden="true">
+                  <span
+                    className="admin-course-item__progress-fill"
+                    style={{ width: `${course.completionRate}%` }}
+                  />
+                </div>
+                <span className="admin-course-item__percent">
+                  {course.completionRate}%
+                </span>
               </div>
             </button>
           );

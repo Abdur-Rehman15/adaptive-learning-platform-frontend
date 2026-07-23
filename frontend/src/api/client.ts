@@ -22,12 +22,19 @@ export async function apiFetch<T>(
   });
 
   const contentType = res.headers.get('content-type') || '';
+  const text = await res.text();
   let payload: unknown = null;
 
-  if (contentType.includes('application/json')) {
-    payload = await res.json();
-  } else if (contentType.includes('text/')) {
-    payload = await res.text();
+  if (text) {
+    if (contentType.includes('application/json')) {
+      try {
+        payload = JSON.parse(text);
+      } catch (err) {
+        payload = text;
+      }
+    } else {
+      payload = text;
+    }
   }
 
   if (!res.ok) {

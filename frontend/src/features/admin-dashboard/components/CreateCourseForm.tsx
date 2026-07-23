@@ -40,8 +40,7 @@ export const CreateCourseForm = ({ onSuccess }: CreateCourseFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Title */}
-      <div className="field">
+      <div className="admin-form-group field">
         <label htmlFor="course-title" className="field__label">Course Title</label>
         <input
           id="course-title"
@@ -52,18 +51,17 @@ export const CreateCourseForm = ({ onSuccess }: CreateCourseFormProps) => {
           placeholder="e.g. Introduction to Python Programming"
           required
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-          <span style={{ fontSize: '0.75rem', color: titleValid ? 'var(--color-success)' : 'var(--color-ink-faint)' }}>
+        <div className="admin-form-helper-row">
+          <span className={`admin-form-helper${titleValid ? ' admin-form-helper--valid' : ''}`}>
             {titleValid ? '✓ Title length valid' : 'Minimum 10 characters required'}
           </span>
-          <span style={{ fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace', color: 'var(--color-ink-soft)' }}>
+          <span className="admin-form-helper" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
             {titleLen} chars
           </span>
         </div>
       </div>
 
-      {/* Description */}
-      <div className="field">
+      <div className="admin-form-group field">
         <label htmlFor="course-description" className="field__label">Course Description</label>
         <textarea
           id="course-description"
@@ -75,26 +73,26 @@ export const CreateCourseForm = ({ onSuccess }: CreateCourseFormProps) => {
           required
           style={{ resize: 'vertical', lineHeight: 1.6 }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-          <span style={{ 
-            fontSize: '0.75rem', 
-            color: descValid 
-              ? 'var(--color-success)' 
-              : descLen > 1000 
-                ? 'var(--color-danger)' 
-                : 'var(--color-ink-faint)' 
-          }}>
-            {descValid 
-              ? '✓ Description length valid' 
-              : descLen > 1000 
-                ? 'Description exceeds 1000 characters' 
+        <div className="admin-form-helper-row">
+          <span
+            className={`admin-form-helper${
+              descValid
+                ? ' admin-form-helper--valid'
+                : descLen > 1000
+                  ? ' admin-form-helper--error'
+                  : ''
+            }`}
+          >
+            {descValid
+              ? '✓ Description length valid'
+              : descLen > 1000
+                ? 'Description exceeds 1000 characters'
                 : `${200 - descLen} more characters needed`}
           </span>
-          <span style={{ 
-            fontSize: '0.75rem', 
-            fontFamily: 'JetBrains Mono, monospace', 
-            color: descLen > 1000 ? 'var(--color-danger)' : 'var(--color-ink-soft)' 
-          }}>
+          <span
+            className={`admin-form-helper${descLen > 1000 ? ' admin-form-helper--error' : ''}`}
+            style={{ fontFamily: 'JetBrains Mono, monospace' }}
+          >
             {descLen} / 1000
           </span>
         </div>
@@ -106,14 +104,16 @@ export const CreateCourseForm = ({ onSuccess }: CreateCourseFormProps) => {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="dashboard-btn dashboard-btn--accent"
-        style={{ alignSelf: 'flex-start', padding: '14px 32px', fontSize: '0.9rem' }}
-      >
-        {isPending ? 'CREATING COURSE…' : 'Create Course →'}
-      </button>
+      <div className="admin-form-actions">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="dashboard-btn dashboard-btn--accent"
+          style={{ padding: '14px 32px', fontSize: '0.9rem' }}
+        >
+          {isPending ? 'CREATING COURSE…' : 'Create Course →'}
+        </button>
+      </div>
     </form>
   );
 };

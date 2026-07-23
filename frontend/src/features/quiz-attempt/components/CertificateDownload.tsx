@@ -5,9 +5,10 @@ import { downloadCertificate } from '../api/quizAttempt.api';
 interface CertificateDownloadProps {
   courseId: number;
   courseTitle: string;
+  compact?: boolean;
 }
 
-export const CertificateDownload = ({ courseId, courseTitle }: CertificateDownloadProps) => {
+export const CertificateDownload = ({ courseId, courseTitle, compact = false }: CertificateDownloadProps) => {
   const { token } = useAuth();
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -30,6 +31,40 @@ export const CertificateDownload = ({ courseId, courseTitle }: CertificateDownlo
       setIsDownloading(false);
     }
   };
+
+  if (compact) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+        <button
+          id={`cert-download-btn-${courseId}`}
+          type="button"
+          className="dashboard-btn dashboard-btn--primary"
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px 14px', fontSize: '0.8125rem' }}
+          onClick={() => void handleDownload()}
+          disabled={isDownloading}
+          aria-label={`Download certificate for ${courseTitle}`}
+        >
+          {isDownloading ? (
+            <>
+              <span className="quiz-view__spinner" />
+              Generating PDF…
+            </>
+          ) : (
+            <>🏆 Download Certificate</>
+          )}
+        </button>
+
+        {downloadSuccess && (
+          <p className="certificate-download__success" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
+            ✓ Certificate saved!
+          </p>
+        )}
+        {downloadError && (
+          <p className="certificate-download__error" style={{ fontSize: '0.75rem', marginTop: '4px' }}>{downloadError}</p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="certificate-download">

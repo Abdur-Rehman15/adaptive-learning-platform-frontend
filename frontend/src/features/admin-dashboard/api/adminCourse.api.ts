@@ -16,11 +16,30 @@ export interface CourseResponse {
   created_by: string;
 }
 
+export interface CourseUpdatePayload {
+  title?: string;
+  description?: string;
+}
+
 export interface ModuleCreatePayload {
   title: string;
   order: number;
   content_url: string;
 }
+
+export interface ModuleUpdatePayload {
+  title?: string;
+  order?: number;
+  content_url?: string;
+}
+
+/** Ordered module entries for PATCH /courses/{courseId}/modules */
+export interface ModuleOrderItem {
+  module_id: number;
+  order: number;
+}
+
+export type ModuleReorderPayload = ModuleOrderItem[];
 
 export interface ModuleResponse {
   id: number;
@@ -59,6 +78,61 @@ export const fetchCourseModules = async (
 ): Promise<ModuleResponse[]> => {
   return apiFetch<ModuleResponse[]>(`/courses/${courseId}/modules`, {
     method: 'GET',
+    headers: withAuthHeaders(token),
+  });
+};
+
+export const updateCourse = async (
+  token: string,
+  courseId: number,
+  payload: CourseUpdatePayload
+): Promise<CourseResponse> => {
+  return apiFetch<CourseResponse>(`/courses/${courseId}`, {
+    method: 'PATCH',
+    headers: withAuthHeaders(token),
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateModule = async (
+  token: string,
+  courseId: number,
+  moduleId: number,
+  payload: ModuleUpdatePayload
+): Promise<ModuleResponse> => {
+  return apiFetch<ModuleResponse>(`/courses/${courseId}/modules/${moduleId}`, {
+    method: 'PATCH',
+    headers: withAuthHeaders(token),
+    body: JSON.stringify(payload),
+  });
+};
+
+export const reorderModules = async (
+  token: string,
+  courseId: number,
+  modules: ModuleReorderPayload
+): Promise<ModuleResponse[]> => {
+  return apiFetch<ModuleResponse[]>(`/courses/${courseId}/modules`, {
+    method: 'PATCH',
+    headers: withAuthHeaders(token),
+    body: JSON.stringify(modules),
+  });
+};
+
+export const deleteCourse = async (token: string, courseId: number): Promise<void> => {
+  await apiFetch<null>(`/courses/${courseId}`, {
+    method: 'DELETE',
+    headers: withAuthHeaders(token),
+  });
+};
+
+export const deleteModule = async (
+  token: string,
+  courseId: number,
+  moduleId: number
+): Promise<void> => {
+  await apiFetch<null>(`/courses/${courseId}/modules/${moduleId}`, {
+    method: 'DELETE',
     headers: withAuthHeaders(token),
   });
 };

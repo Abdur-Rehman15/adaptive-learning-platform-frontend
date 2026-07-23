@@ -99,11 +99,22 @@ const normalizeInstructorModules = (rawValue: unknown): InstructorModuleMetric[]
         entry.title ?? entry.module_title ?? entry.moduleTitle ?? entry.name,
         `Module ${index + 1}`
       ),
-      learners: Math.max(0, Math.round(toNumber(entry.learners ?? entry.learner_count ?? 0, 0))),
-      completionRate: clampPercentage(
-        toNumber(entry.completion_rate ?? entry.completionRate ?? entry.progress_percent, 0)
+      learners: Math.max(
+        0,
+        Math.round(toNumber(entry.learners ?? entry.learner_count ?? entry.learners_count, 0))
       ),
-      averageScore: clampPercentage(toNumber(entry.average_score ?? entry.averageScore ?? entry.score, 0)),
+      completionRate: clampPercentage(
+        toNumber(
+          entry.completion_rate ??
+            entry.completionRate ??
+            entry.completion_rate_percent ??
+            entry.progress_percent,
+          0
+        )
+      ),
+      averageScore: clampPercentage(
+        toNumber(entry.average_score ?? entry.averageScore ?? entry.score, 0)
+      ),
     };
   });
 };
@@ -140,12 +151,79 @@ const normalizeRecentActivity = (rawValue: unknown): string[] => {
     .filter((item) => item.length > 0);
 };
 
+const isFlatInstructorDashboard = (record: Record<string, unknown>) =>
+  'total_enrolled_learners' in record ||
+  'course_average_progress' in record ||
+  'completion_rate_percent' in record;
+
+const buildModuleMetricsFromCourseModules = (rawValue: unknown): InstructorModuleMetric[] => {
+  return normalizeList(rawValue).map((item, index) => {
+    const entry = isRecord(item) ? item : {};
+
+    return {
+      id: toText(entry.id ?? entry.module_id ?? index + 1, `module-${index + 1}`),
+      title: toText(entry.title ?? entry.module_title ?? entry.name, `Module ${index + 1}`),
+      learners: 0,
+      completionRate: 0,
+      averageScore: 0,
+    };
+  });
+};
+
+const countLearnersByStatus = (
+  learners: InstructorLearnerMetric[],
+  matcher: (status: string) => boolean
+) => learners.filter((learner) => matcher(learner.status.toLowerCase())).length;
+
 export const normalizeInstructorDashboard = (
   rawValue: unknown,
-  fallbackCourse?: InstructorCourse
+  fallbackCourse?: InstructorCourse,
+  courseModules?: unknown
 ): InstructorDashboardData => {
   const root = normalizeMaybeRecord(rawValue);
-  const summarySource = normalizeMaybeRecord(root.summary ?? root.data ?? root.dashboard);
+  const summarySource = isFlatInstructorDashboard(root)
+    ? root
+    : normalizeMaybeRecord(root.summary ?? root.data ?? root.dashboard);
+
+  const topLearners = normalizeInstructorTopLearners(
+    root.learners ??
+      root.top_learners ??
+      root.topLearners ??
+      root.learner_progress ??
+      root.learnerProgress
+  );
+
+  const modulesFromDashboard = normalizeInstructorModules(
+    root.modules ?? root.module_metrics ?? root.moduleMetrics ?? root.performance ?? root.modulePerformance
+  );
+
+  const modules =
+    modulesFromDashboard.length > 0
+      ? modulesFromDashboard
+      : buildModuleMetricsFromCourseModules(courseModules);
+
+  const activeLearners = Math.max(
+    0,
+    Math.round(
+      toNumber(
+        summarySource.active_learners ?? summarySource.activeLearners,
+        countLearnersByStatus(
+          topLearners,
+          (status) => status.includes('progress') || status.includes('active')
+        )
+      )
+    )
+  );
+
+  const completedLearners = Math.max(
+    0,
+    Math.round(
+      toNumber(
+        summarySource.completed_learners ?? summarySource.completedLearners,
+        countLearnersByStatus(topLearners, (status) => status.includes('complete'))
+      )
+    )
+  );
 
   return {
     summary: {
@@ -161,52 +239,52 @@ export const normalizeInstructorDashboard = (
         0,
         Math.round(
           toNumber(
-            summarySource.total_learners ?? summarySource.totalLearners,
+            summarySource.total_enrolled_learners ??
+              summarySource.total_learners ??
+              summarySource.totalLearners,
             fallbackCourse?.learnerCount ?? 0
           )
         )
       ),
-      activeLearners: Math.max(
-        0,
-        Math.round(toNumber(summarySource.active_learners ?? summarySource.activeLearners, 0))
-      ),
-      completedLearners: Math.max(
-        0,
-        Math.round(
-          toNumber(summarySource.completed_learners ?? summarySource.completedLearners, 0)
-        )
-      ),
+      activeLearners,
+      completedLearners,
       averageProgress: clampPercentage(
         toNumber(
-          summarySource.average_progress ?? summarySource.averageProgress,
+          summarySource.course_average_progress ??
+            summarySource.average_progress ??
+            summarySource.averageProgress,
           fallbackCourse?.completionRate ?? 0
         )
       ),
       averageScore: clampPercentage(
         toNumber(
-          summarySource.average_score ?? summarySource.averageScore,
+          summarySource.course_average_quiz_score ??
+            summarySource.average_quiz_score ??
+            summarySource.average_score ??
+            summarySource.averageScore,
           fallbackCourse?.averageScore ?? 0
         )
       ),
       completionRate: clampPercentage(
         toNumber(
-          summarySource.completion_rate ?? summarySource.completionRate,
+          summarySource.completion_rate_percent ??
+            summarySource.completion_rate ??
+            summarySource.completionRate,
           fallbackCourse?.completionRate ?? 0
         )
       ),
       certificatesIssued: Math.max(
         0,
         Math.round(
-          toNumber(summarySource.certificates_issued ?? summarySource.certificatesIssued, 0)
+          toNumber(
+            summarySource.certificates_issued ?? summarySource.certificatesIssued,
+            completedLearners
+          )
         )
       ),
     },
-    modules: normalizeInstructorModules(
-      root.modules ?? root.module_metrics ?? root.moduleMetrics ?? root.performance ?? root.modulePerformance
-    ),
-    topLearners: normalizeInstructorTopLearners(
-      root.top_learners ?? root.topLearners ?? root.learners ?? root.learner_progress ?? root.learnerProgress
-    ),
+    modules,
+    topLearners,
     recentActivity: normalizeRecentActivity(
       root.recent_activity ?? root.recentActivity ?? root.activity ?? root.events
     ),

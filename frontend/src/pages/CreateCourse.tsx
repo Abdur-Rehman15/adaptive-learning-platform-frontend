@@ -30,52 +30,31 @@ export const CreateCoursePage = () => {
       <main className="app-shell__content">
 
         {/* Page Header */}
-        <div 
-          style={{
-            border: '2px solid var(--color-border)',
-            borderRadius: '16px',
-            padding: '32px',
-            background: 'var(--color-surface)',
-            boxShadow: '4px 4px 0 var(--color-border)',
-            position: 'relative',
-            marginBottom: '32px'
-          }}
-        >
-          <div 
-            style={{ 
-              position: 'absolute', top: '-14px', left: '24px', 
-              background: 'var(--color-accent)', color: '#fff',
-              border: '2px solid var(--color-border)', borderRadius: '4px',
-              padding: '4px 10px', fontSize: '0.75rem', fontWeight: 700,
-              letterSpacing: '0.05em', textTransform: 'uppercase'
-            }}
-          >
-            Instructor Console
-          </div>
+        <div className="admin-hero" style={{ marginBottom: '32px' }}>
+          <span className="admin-hero__badge">Instructor Console</span>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px' }}>
             <div>
-              <h1 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>
+              <h1 className="admin-hero__title">
                 {step === 'create-course' ? 'Create a New Course' : 'Build Your Curriculum'}
               </h1>
-              <p style={{ color: 'var(--color-ink-soft)', margin: 0 }}>
+              <p className="admin-hero__subtitle">
                 {step === 'create-course'
                   ? 'Define course identity — a compelling title and detailed description that sets learner expectations.'
                   : 'Attach modules with titles, sequential ordering, and content URLs to structure your course delivery.'}
               </p>
             </div>
 
-            {/* Step Indicator */}
-            <div 
-              style={{ 
-                display: 'flex', 
-                flexShrink: 0, 
-                gap: '8px', 
+            <div
+              style={{
+                display: 'flex',
+                flexShrink: 0,
+                gap: '8px',
                 alignItems: 'center',
-                background: 'var(--color-surface-sunken)',
+                background: 'rgba(255, 255, 255, 0.04)',
                 border: '2px solid var(--color-border)',
                 borderRadius: '10px',
-                padding: '10px 16px'
+                padding: '10px 16px',
               }}
             >
               <StepDot index={1} label="Course" active={step === 'create-course'} done={step === 'add-modules'} />

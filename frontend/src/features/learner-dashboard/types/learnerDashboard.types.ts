@@ -11,11 +11,7 @@ export interface LearnerCourseSummary {
   courseTitle: string;
   progressPercent: number;
   averageScore: number;
-  completedModules: number;
-  totalModules: number;
-  completedQuizzes: number;
-  totalQuizzes: number;
-  certificateReady: boolean;
+  weakestTopics: string[];
 }
 
 export interface LearnerScoreTrend {
