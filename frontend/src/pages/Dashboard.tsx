@@ -12,7 +12,7 @@ export const Dashboard = () => {
 
   useEffect(() => {
     if (!isHydrating && (!user || !role)) {
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [user, role, isHydrating, navigate]);
 

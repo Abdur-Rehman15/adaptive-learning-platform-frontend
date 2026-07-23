@@ -11,7 +11,7 @@ export const MyLearningPage = () => {
 
   useEffect(() => {
     if (!isHydrating && (!user || !role)) {
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [user, role, isHydrating, navigate]);
 
