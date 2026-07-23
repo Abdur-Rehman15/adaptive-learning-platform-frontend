@@ -138,7 +138,7 @@ export const QuizAttemptPage = () => {
               <QuizView
                 currentQuestion={currentQuestion}
                 questionNumber={questionNumber}
-                isSubmitting={phase === 'submitting'}
+                isSubmitting={(phase as string) === 'submitting'}
                 canFinish={false}
                 onAnswer={answerQuestion}
                 onFinish={finishQuiz}
@@ -184,7 +184,7 @@ export const QuizAttemptPage = () => {
               moduleTitle={moduleTitle}
               courseId={courseId}
               onRetry={() => void retryQuiz()}
-              isRetrying={phase === 'starting'}
+              isRetrying={(phase as string) === 'starting'}
             />
           )}
 

@@ -250,7 +250,7 @@ export const ModuleMetricsList = ({ modules }: ModuleMetricsListProps) => {
                 <text
                   x={tooltipX + 10} y={tooltipY + 15}
                   fontSize={9} fontWeight={700} fill={color}
-                  textTransform="uppercase" style={{ letterSpacing: '0.06em' }}
+                  style={{ letterSpacing: '0.06em', textTransform: 'uppercase' }}
                 >
                   {typeLabel}
                 </text>

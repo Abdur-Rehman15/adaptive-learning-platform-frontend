@@ -9,7 +9,7 @@ import {
   fetchQuizAttemptSummary,
   fetchAttemptAnswers,
 } from '../api/quizAttempt.api';
-import type { QuizState } from '../types/quizAttempt.types';
+import type { QuizState, QuizSubmitResponse } from '../types/quizAttempt.types';
 import type { Question } from '@/features/course-questions/types/courseQuestions.types';
 
 // ─── State machine ────────────────────────────────────────────────────────────
