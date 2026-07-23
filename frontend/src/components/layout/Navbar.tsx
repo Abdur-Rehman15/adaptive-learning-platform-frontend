@@ -86,7 +86,7 @@ export const Navbar = ({ role }: NavbarProps) => {
 
   const handleLogout = () => {
     clearSession();
-    navigate('/login');
+    navigate('/');
   };
 
   const handleOpenEditModal = () => {
