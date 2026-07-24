@@ -108,9 +108,9 @@ export const QuizResult = ({
           id="quiz-back-btn"
           type="button"
           className="dashboard-btn dashboard-btn--primary quiz-result__btn"
-          onClick={() => navigate(courseId ? '/courses' : '/courses')}
+          onClick={() => navigate(courseId ? '/my-learning' : '/')}
         >
-          ← Back to Courses
+          ← Back to learning
         </button>
       </div>
     </div>

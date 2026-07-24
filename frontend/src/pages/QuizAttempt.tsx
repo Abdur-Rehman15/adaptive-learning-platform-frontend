@@ -83,14 +83,6 @@ export const QuizAttemptPage = () => {
 
           {/* ── Back navigation ── */}
           <div className="quiz-page__nav">
-            <button
-              type="button"
-              className="dashboard-btn dashboard-btn--sunken"
-              style={{ padding: '6px 14px', fontSize: '0.8125rem' }}
-              onClick={() => navigate('/courses')}
-            >
-              ← Back to Courses
-            </button>
             <div className="quiz-page__breadcrumb">
               <span style={{ color: 'var(--color-ink-soft)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}>
                 ADAPTIVE QUIZ

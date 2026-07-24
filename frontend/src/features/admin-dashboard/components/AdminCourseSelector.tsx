@@ -37,9 +37,6 @@ export const AdminCourseSelector = ({
               <span className="admin-course-item__dot" aria-hidden="true" />
               <div className="admin-course-item__info">
                 <span className="admin-course-item__title">{course.title}</span>
-                <span className="admin-course-item__meta">
-                  {course.learnerCount} learner{course.learnerCount !== 1 ? 's' : ''}
-                </span>
               </div>
               <div className="admin-course-item__stats">
                 <div className="admin-course-item__progress-pill" aria-hidden="true">
